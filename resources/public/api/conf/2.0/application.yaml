@@ -52,7 +52,7 @@ info:
   contact: {}
   version: '2.0'
 servers:
-  - url: https://api.service.hmrc.gov.uk/
+  - url: https://api.service.hmrc.gov.uk
     variables: {}
 paths:
   /organisations/vat/check-vat-number/lookup/{targetVrn}:
