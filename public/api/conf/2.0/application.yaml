@@ -147,7 +147,7 @@ paths:
                 message: Unknown error
       deprecated: false
       security:
-        - applicationRestricted: []
+        - Application-Restricted: []
   /organisations/vat/check-vat-number/lookup/{targetVrn}/{requesterVrn}:
     get:
       tags:
@@ -267,10 +267,10 @@ paths:
                 message: Unknown error
       deprecated: false
       security:
-        - applicationRestricted: []
+        - Application-Restricted: []
 components:
   securitySchemes:
-    applicationRestricted:
+    Application-Restricted:
       type: oauth2
       description: HMRC supports OAuth 2.0 for authenticating app-restricted API requests
       flows:
