@@ -82,15 +82,6 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/OrganisationsVatCheckVatNumberLookupresponse'
-                  - example:
-                      target:
-                        name: Credite Sberger Donal Inc.
-                        vatNumber: '553557881'
-                        address:
-                          line1: 131B Barton Hamlet
-                          postcode: SW97 5CK
-                          countryCode: GB
-                      processingDate: 2019-01-31T12:43:17+00:00
               example:
                 target:
                   name: Credite Sberger Donal Inc.
@@ -109,9 +100,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Invalid request
-                    example:
-                      code: INVALID_REQUEST
-                      message: Invalid targetVrn - Vrn parameters should be 9 or 12 digits
               example:
                 code: INVALID_REQUEST
                 message: Invalid targetVrn - Vrn parameters should be 9 or 12 digits
@@ -124,9 +112,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Not found
-                    example:
-                      code: NOT_FOUND
-                      message: targetVrn does not match a registered company
               example:
                 code: NOT_FOUND
                 message: targetVrn does not match a registered company
@@ -139,9 +124,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Internal server error
-                    example:
-                      code: INTERNAL_SERVER_ERROR
-                      message: Unknown error
               example:
                 code: INTERNAL_SERVER_ERROR
                 message: Unknown error
@@ -183,17 +165,6 @@ paths:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/OrganisationsVatCheckVatNumberLookupresponse1'
-                  - example:
-                      target:
-                        name: Credite Sberger Donal Inc.
-                        vatNumber: '553557881'
-                        address:
-                          line1: 131B Barton Hamlet
-                          postcode: SW97 5CK
-                          countryCode: GB
-                      requester: '146295999727'
-                      consultationNumber: ypAeKRPlW
-                      processingDate: 2019-01-31T12:53:05+00:00
               example:
                 target:
                   name: Credite Sberger Donal Inc.
@@ -214,9 +185,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Invalid request
-                    example:
-                      code: INVALID_REQUEST
-                      message: Invalid requesterVrn - Vrn parameters should be 9 or 12 digits
               example:
                 code: INVALID_REQUEST
                 message: Invalid requesterVrn - Vrn parameters should be 9 or 12 digits
@@ -229,9 +197,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Invalid request
-                    example:
-                      code: INVALID_REQUEST
-                      message: requesterVrn does not match a registered company
               example:
                 code: INVALID_REQUEST
                 message: requesterVrn does not match a registered company
@@ -244,9 +209,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Not found
-                    example:
-                      code: NOT_FOUND
-                      message: targetVrn does not match a registered company
               example:
                 code: NOT_FOUND
                 message: targetVrn does not match a registered company
@@ -259,9 +221,6 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Error1'
                   - description: Internal server error
-                    example:
-                      code: INTERNAL_SERVER_ERROR
-                      message: Unknown error
               example:
                 code: INTERNAL_SERVER_ERROR
                 message: Unknown error
