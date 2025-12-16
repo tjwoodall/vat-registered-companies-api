@@ -66,7 +66,7 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output should have size 1
-      val loggedMessage :: Nil = output
+      val List(loggedMessage) = output
       loggedMessage should endWith(s"DEBUG $vrcLoggerName -- $msg")
     }
 
@@ -79,7 +79,11 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output.size should be > 2
-      val loggedMessage :: exceptionMessage :: stacktrace = output
+      val (loggedMessage, exceptionMessage, stacktrace) = output match {
+        case msg :: ex :: trace => (msg, ex, trace)
+        case _ => throw new IllegalArgumentException("Expected at least two elements")
+      }
+
       loggedMessage should endWith(s"DEBUG $vrcLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
@@ -93,7 +97,11 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output should have size 1
-      val loggedMessage :: Nil = output
+      val (loggedMessage) = output match {
+          case x :: Nil => x
+          case _ => throw new IllegalArgumentException("Expected one element only")
+        }
+
       loggedMessage should endWith(s"INFO $vrcLoggerName -- $msg")
     }
 
@@ -106,7 +114,12 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output.size should be > 2
-      val loggedMessage :: exceptionMessage :: stacktrace = output
+
+      val (loggedMessage, exceptionMessage, stacktrace) = output match {
+        case msg :: ex :: trace => (msg, ex, trace)
+        case _ => throw new IllegalArgumentException("Expected at least two elements")
+      }
+
       loggedMessage should endWith(s"INFO $vrcLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
@@ -120,7 +133,11 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output should have size 1
-      val loggedMessage :: Nil = output
+      val (loggedMessage) = output match {
+        case x :: Nil => x
+        case _ => throw new IllegalArgumentException("Expected one element only")
+      }
+
       loggedMessage should endWith(s"WARN $vrcLoggerName -- $msg")
 
     }
@@ -134,7 +151,11 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output.size should be > 2
-      val loggedMessage :: exceptionMessage :: stacktrace = output
+      val (loggedMessage, exceptionMessage, stacktrace) = output match {
+        case msg :: ex :: trace => (msg, ex, trace)
+        case _ => throw new IllegalArgumentException("Expected at least two elements")
+      }
+
       loggedMessage should endWith(s"WARN $vrcLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
@@ -148,7 +169,10 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output should have size 1
-      val loggedMessage :: Nil = output
+      val (loggedMessage) = output match {
+        case x :: Nil => x
+        case _ => throw new IllegalArgumentException("Expected one element only")
+      }
       loggedMessage should endWith(s"ERROR $vrcLoggerName -- $msg")
     }
 
@@ -161,7 +185,10 @@ class VrcLoggerSpec extends UnitSpec with MockitoSugar {
       }
 
       output.size should be > 2
-      val loggedMessage :: exceptionMessage :: stacktrace = output
+      val (loggedMessage, exceptionMessage, stacktrace) = output match {
+        case loggedMessage :: exceptionMessage :: stackTrace => (loggedMessage, exceptionMessage, stackTrace)
+        case _ => throw new IllegalArgumentException("Expected at least two elements")
+      }
       loggedMessage should endWith(s"ERROR $vrcLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))

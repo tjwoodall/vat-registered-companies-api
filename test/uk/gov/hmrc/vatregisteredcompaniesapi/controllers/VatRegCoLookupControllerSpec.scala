@@ -27,7 +27,6 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.vatregisteredcompaniesapi.connectors.VatRegisteredCompaniesConnector
 import uk.gov.hmrc.vatregisteredcompaniesapi.logging.VrcLogger
@@ -35,6 +34,7 @@ import uk.gov.hmrc.vatregisteredcompaniesapi.models._
 
 import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 class VatRegCoLookupControllerSpec extends AnyWordSpec
@@ -44,10 +44,9 @@ class VatRegCoLookupControllerSpec extends AnyWordSpec
 {
 
   val mockVatRegisteredCompaniesConnector: VatRegisteredCompaniesConnector = mock[VatRegisteredCompaniesConnector]
-  val mockAuditConnector: AuditConnector = mock[AuditConnector]
   val cc = play.api.test.Helpers.stubControllerComponents()
   private val mockLogger = new VRCLLogger(mock[ServicesConfig])
-  val controller = new VatRegCoLookupController(mockVatRegisteredCompaniesConnector, mockAuditConnector, cc, mockLogger)
+  val controller = new VatRegCoLookupController(mockVatRegisteredCompaniesConnector, cc, mockLogger)
   val testVatNo: VatNumber = "123456789"
   val testConsultationNumber: ConsultationNumber = ConsultationNumber.generate
   val testProcessingDate: ProcessingDate = ZonedDateTime.now.withZoneSameInstant(ZoneId.of("Europe/London"))
@@ -64,7 +63,7 @@ class VatRegCoLookupControllerSpec extends AnyWordSpec
 
   "GET of known VAT number " should {
     "return 200 " in {
-      when(mockVatRegisteredCompaniesConnector.lookup(any())(any(),any()))
+      when(mockVatRegisteredCompaniesConnector.lookup(any())(using any(),any()))
         .thenReturn(Future(Some(LookupResponse(Some(knownCo)))))
       val result = controller.lookup(testVatNo.clean).apply(fakeRequest)
       status(result) shouldBe Status.OK
@@ -76,7 +75,7 @@ class VatRegCoLookupControllerSpec extends AnyWordSpec
 
   "GET of known VAT number and requester " should {
     "return 200 " in {
-      when(mockVatRegisteredCompaniesConnector.lookup(any())(any(),any()))
+      when(mockVatRegisteredCompaniesConnector.lookup(any())(using any(),any()))
         .thenReturn(Future(Some(LookupResponse(Some(knownCo), Some(testVatNo), Some(testConsultationNumber)))))
       val result = controller.lookupVerified(testVatNo, testVatNo).apply(fakeRequest)
       status(result) shouldBe Status.OK
@@ -90,7 +89,7 @@ class VatRegCoLookupControllerSpec extends AnyWordSpec
 
   "GET of unknown VAT number " should {
     "return 404 " in {
-      when(mockVatRegisteredCompaniesConnector.lookup(any())(any(),any()))
+      when(mockVatRegisteredCompaniesConnector.lookup(any())(using any(),any()))
         .thenReturn(Future(Some(LookupResponse(None))))
       val result = controller.lookup(testVatNo).apply(fakeRequest)
       status(result) shouldBe Status.NOT_FOUND
@@ -103,7 +102,7 @@ class VatRegCoLookupControllerSpec extends AnyWordSpec
 
   "GET of any VAT number with an unknown requester" should {
     "return 403 " in {
-      when(mockVatRegisteredCompaniesConnector.lookup(any())(any(),any()))
+      when(mockVatRegisteredCompaniesConnector.lookup(any())(using any(),any()))
         .thenReturn(Future(Some(LookupResponse(Some(knownCo), None, None))))
       val result = controller.lookupVerified(testVatNo, testVatNo).apply(fakeRequest)
       status(result) shouldBe Status.FORBIDDEN
@@ -149,7 +148,7 @@ class VatRegCoLookupControllerSpec extends AnyWordSpec
 
   "GET of VAT number " should {
     "return a 500 if there is an underlying problem" in {
-      when(mockVatRegisteredCompaniesConnector.lookup(any())(any(),any())).thenReturn(Future.failed(new Throwable))
+      when(mockVatRegisteredCompaniesConnector.lookup(any())(using any(),any())).thenReturn(Future.failed(new Throwable))
       val result = controller.lookup(testVatNo).apply(fakeRequest)
       status(result) shouldBe Status.INTERNAL_SERVER_ERROR
     }
