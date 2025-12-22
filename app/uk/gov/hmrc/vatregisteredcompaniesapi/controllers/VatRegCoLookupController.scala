@@ -22,7 +22,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.vatregisteredcompaniesapi.connectors.VatRegisteredCompaniesConnector
 import uk.gov.hmrc.vatregisteredcompaniesapi.logging.VrcLogger
@@ -33,73 +32,72 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class VatRegCoLookupController @Inject()(
   vatRegisteredCompaniesConnector: VatRegisteredCompaniesConnector,
-  auditConnector: AuditConnector,
   cc: ControllerComponents,
   logger: VrcLogger
-)(implicit executionContext: ExecutionContext) extends BackendController(cc) {
+)(using executionContext: ExecutionContext) extends BackendController(cc) {
 
   def lookupVerified(target: VatNumber, requester: VatNumber): Action[AnyContent] =
     Action.async { implicit request =>
       logVersionOfApiCalled
-      lookup(Lookup(target, true, requester.some))
+      handleRequest(Lookup(target, true, requester.some))
     }
 
   def lookup(target: VatNumber): Action[AnyContent] =
     Action.async { implicit request =>
       logVersionOfApiCalled
-      lookup(Lookup(target))
+      handleRequest(Lookup(target))
     }
 
   private val vatNoRegex: String = "^[0-9]{9}|[0-9]{12}$"
 
-  private def isValid(lookup: Lookup): Boolean =
-    lookup.target.matches(vatNoRegex) && lookup.requester.forall(_.matches(vatNoRegex))
 
-  private def handleInvalidRequest(lookup: Lookup): LookupRequestError = {
+  private def handleRequest(lookup: Lookup)(implicit headerCarrier: HeaderCarrier): Future[Result] = {
     (lookup.target.matches(vatNoRegex), lookup.requester.forall(_.matches(vatNoRegex))) match {
       case (false, false) =>
-          LookupRequestError(
-            LookupRequestError.INVALID_REQUEST,
-            LookupRequestError.invalidTargetAndRequesterVrnMsg)
+        handleBadRequest(LookupRequestError.invalidTargetAndRequesterVrnMsg)
       case (_, false) =>
-          LookupRequestError(
-            LookupRequestError.INVALID_REQUEST,
-            LookupRequestError.invalidRequesterVrnMsg)
+        handleBadRequest(LookupRequestError.invalidRequesterVrnMsg)
       case (false, _) =>
-          LookupRequestError(
-            LookupRequestError.INVALID_REQUEST,
-            LookupRequestError.invalidTargetVrnMsg)
+        handleBadRequest(LookupRequestError.invalidTargetVrnMsg)
+      case (true, true) =>
+        vatRegLookup(lookup)
     }
   }
 
-  private def lookup(lookup: Lookup)(implicit headerCarrier: HeaderCarrier): Future[Result] = {
-    if (!isValid(lookup)) {
-      Future(BadRequest(Json.toJson(handleInvalidRequest(lookup))))
-    } else {
-      vatRegisteredCompaniesConnector.lookup(lookup).map {
-        case Some(LookupResponse(Some(_), _, None, _)) if lookup.requester.nonEmpty =>
-          Forbidden(Json.toJson(
-            LookupRequestError(LookupRequestError.INVALID_REQUEST, LookupRequestError.requesterNotFoundMsg)
+
+  private def handleBadRequest(msg: String) = {
+    Future(BadRequest(Json.toJson(
+      LookupRequestError(LookupRequestError.INVALID_REQUEST, msg))
+      ))
+  }
+
+
+
+  private def vatRegLookup(lookup: Lookup)(implicit headerCarrier: HeaderCarrier): Future[Result] = {
+    vatRegisteredCompaniesConnector.lookup(lookup).map {
+
+      case Some(LookupResponse(Some(_), _, None, _))
+      if lookup.requester.nonEmpty
+      =>
+      Forbidden(Json.toJson(
+        LookupRequestError(LookupRequestError.INVALID_REQUEST, LookupRequestError.requesterNotFoundMsg)
           ))
-        case Some(LookupResponse(None, _, _, _)) =>
-          NotFound(Json.toJson(
-            LookupRequestError(LookupRequestError.NOT_FOUND, LookupRequestError.targetNotFoundMsg)
-          ))
-        case Some(company) =>
-          Ok(Json.toJson(company))
-      }.recover {
-        case e =>
-          logger
-            .error(
-              e.getMessage,
-              e.fillInStackTrace()
-            )
-          InternalServerError(Json.toJson(LookupRequestError("INTERNAL_SERVER_ERROR", "Unknown error")))
-      }
+
+      case Some(LookupResponse(None, _, _, _)) | None =>
+        NotFound(Json.toJson(
+          LookupRequestError(LookupRequestError.NOT_FOUND, LookupRequestError.targetNotFoundMsg)))
+
+      case Some(company) =>
+        Ok(Json.toJson(company))
+
+    }.recover {
+      case e => logger.error
+        (e.getMessage, e.fillInStackTrace())
+           InternalServerError(Json.toJson(LookupRequestError("INTERNAL_SERVER_ERROR", "Unknown error")))
     }
   }
 
-  private def logVersionOfApiCalled(implicit request: Request[_]): Unit = {
+  private def logVersionOfApiCalled(implicit request: Request[?]): Unit = {
     request.headers.get(ACCEPT) match {
       case Some(header) if header.endsWith("2.0+json") =>
         logger.info("Version 2.0 of the api has been called")

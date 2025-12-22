@@ -23,7 +23,7 @@ import uk.gov.hmrc.gitstamp.GitStampPlugin.gitStampSettings
 name := "vat-registered-companies-api"
 PlayKeys.playDefaultPort := 8733
 
-scalaVersion := "3.3.5"
+scalaVersion := "3.7.1"
 
 Seq( gitStampSettings: _* )
 
@@ -56,10 +56,15 @@ lazy val microservice = (project in file("."))
     scoverageSettings
   )
   .settings(majorVersion := 0)
-  .settings(scalacOptions ++= Seq(
-    "-Wconf:src=routes/.*:s",
-    "-Wconf:src=views/.*txt.*&cat=unused-imports:silent"
-  ))
+
+  .settings(
+    scalacOptions ++= Seq(
+    "-Wconf:src=routes/.*:s,src=views/.*txt.*:s,msg=unused import*:s",
+    "-unchecked",
+    "-encoding",
+    ),
+    scalacOptions := scalacOptions.value.distinct
+  )
 
 def onPackageName(rootPackage: String): String => Boolean = {
   testName => testName startsWith rootPackage

@@ -45,6 +45,6 @@ class ApiDocumentationController @Inject()
     Future.successful(
       Ok(
         definition
-      ).as(ContentTypes.withCharset(MimeTypes.JSON)(Codec.utf_8)))
+      ).as(ContentTypes.withCharset(MimeTypes.JSON)(using Codec.utf_8)))
   }
 }

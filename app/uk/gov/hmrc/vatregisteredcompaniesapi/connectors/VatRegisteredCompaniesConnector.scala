@@ -28,8 +28,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class VatRegisteredCompaniesConnector @Inject()(
   http: HttpClientV2,
-  environment: Environment,
-  configuration: Configuration,
   servicesConfig: ServicesConfig
 ) {
 
@@ -41,7 +39,7 @@ class VatRegisteredCompaniesConnector @Inject()(
       http.get(url"$url/lookup/${lookup.target.clean}/$requester")
         .execute[LookupResponse]
         .map(Some(_))
-    case a =>
+    case _ =>
       http.get(url"$url/lookup/${lookup.target.clean}")
         .execute[LookupResponse]
         .map(Some(_))
