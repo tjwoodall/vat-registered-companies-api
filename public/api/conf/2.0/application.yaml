@@ -54,6 +54,8 @@ info:
 servers:
   - url: https://api.service.hmrc.gov.uk
     variables: {}
+  - url: https://test-api.service.hmrc.gov.uk
+    variables: {}
 paths:
   /organisations/vat/check-vat-number/lookup/{targetVrn}:
     get:
